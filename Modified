@@ -1,20 +1,14 @@
-#SEA BATTLE
 
-#importing libraries 
-from os import system
+
+ from os import system
 import time
 import random
 import sys
 
-# # == hitted
-# x == not any ship
-# o == not touched place
 
-#VARIABLES
 list_of_hitted = []
 stat = []
 
-#Functions
 def clear(x):
     time.sleep(x)
     system("cls")
