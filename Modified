@@ -1,0 +1,89 @@
+import os
+import random
+
+class BattleshipGame:
+    def __init__(self):
+        self.board_size = 7
+        self.ships = {'3': 1, '2': 2, '1': 4}
+        self.board = [[' ' for _ in range(self.board_size)] for _ in range(self.board_size)]
+        self.player_name = input("Enter your name: ")
+        self.player_shots = set()
+        self.remaining_ships = sum(self.ships.values())
+
+    def print_board(self, hide_ships=False):
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print(f"\n   A B C D E F G\n")
+        for i in range(self.board_size):
+            print(f"{i + 1} | {' '.join(self.board[i])} |")
+        print("\n")
+
+    def place_ships(self):
+        for ship_size, num_ships in self.ships.items():
+            for _ in range(num_ships):
+                self.place_ship(int(ship_size))
+
+    def place_ship(self, size):
+        while True:
+            direction = random.choice(['horizontal', 'vertical'])
+            x = random.randint(0, self.board_size - 1)
+            y = random.randint(0, self.board_size - 1)
+
+            if direction == 'horizontal' and x + size <= self.board_size and self.is_valid_placement(x, y, size, direction):
+                for i in range(size):
+                    self.board[y][x + i] = str(size)
+                break
+            elif direction == 'vertical' and y + size <= self.board_size and self.is_valid_placement(x, y, size, direction):
+                for i in range(size):
+                    self.board[y + i][x] = str(size)
+                break
+
+    def is_valid_placement(self, x, y, size, direction):
+        for i in range(-1, size + 1):
+            for j in range(-1, 2):
+                new_x, new_y = x + i * (direction == 'horizontal'), y + i * (direction == 'vertical')
+                if 0 <= new_x < self.board_size and 0 <= new_y < self.board_size and self.board[new_y][new_x] != ' ':
+                    return False
+        return True
+
+    def player_turn(self):
+        while True:
+            try:
+                shot = input("Enter your shot (e.g., A3): ").upper()
+                if len(shot) != 2 or not ('A' <= shot[0] <= 'G') or not ('1' <= shot[1] <= '7'):
+                    raise ValueError("Invalid input. Please enter a valid shot (e.g., A3).")
+                x = ord(shot[0]) - ord('A')
+                y = int(shot[1]) - 1
+                if (x, y) in self.player_shots:
+                    raise ValueError("You already shot there. Try again.")
+                break
+            except ValueError as e:
+                print(e)
+        return x, y
+
+    def play_game(self):
+        self.place_ships()
+        self.print_board()
+
+        while self.remaining_ships > 0:
+            x, y = self.player_turn()
+
+            if self.board[y][x] == ' ':
+                print("Miss!")
+                self.board[y][x] = 'M'
+            else:
+                ship_size = int(self.board[y][x])
+                self.board[y][x] = 'H'
+                if self.is_ship_sunk(ship_size):
+                    print(f"Hit and sunk a {ship_size}-sized ship!")
+                    self.remaining_ships -= 1
+                else:
+                    print("Hit!")
+
+            self.player_shots.add((x, y))
+            self.print_board()
+
+        print(f"Congratulations, {self.player_name}! You sank all the ships in {len(self.player_shots)} shots.")
+
+if __name__ == "__main__":
+    game = BattleshipGame()
+    game.play_game()
