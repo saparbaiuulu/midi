@@ -1,89 +1,150 @@
-import os
+#SEA BATTLE
+
+#importing libraries 
+from os import system
+import time
 import random
+import sys
 
-class BattleshipGame:
-    def __init__(self):
-        self.board_size = 7
-        self.ships = {'3': 1, '2': 2, '1': 4}
-        self.board = [[' ' for _ in range(self.board_size)] for _ in range(self.board_size)]
-        self.player_name = input("Enter your name: ")
-        self.player_shots = set()
-        self.remaining_ships = sum(self.ships.values())
+# # == hitted
+# x == not any ship
+# o == not touched place
 
-    def print_board(self, hide_ships=False):
-        os.system('cls' if os.name == 'nt' else 'clear')
-        print(f"\n   A B C D E F G\n")
-        for i in range(self.board_size):
-            print(f"{i + 1} | {' '.join(self.board[i])} |")
-        print("\n")
+#VARIABLES
+list_of_hitted = []
+stat = []
 
-    def place_ships(self):
-        for ship_size, num_ships in self.ships.items():
-            for _ in range(num_ships):
-                self.place_ship(int(ship_size))
+#Functions
+def clear(x):
+    time.sleep(x)
+    system("cls")
 
-    def place_ship(self, size):
-        while True:
-            direction = random.choice(['horizontal', 'vertical'])
-            x = random.randint(0, self.board_size - 1)
-            y = random.randint(0, self.board_size - 1)
+def exit():
+    sys.exit()
 
-            if direction == 'horizontal' and x + size <= self.board_size and self.is_valid_placement(x, y, size, direction):
-                for i in range(size):
-                    self.board[y][x + i] = str(size)
-                break
-            elif direction == 'vertical' and y + size <= self.board_size and self.is_valid_placement(x, y, size, direction):
-                for i in range(size):
-                    self.board[y + i][x] = str(size)
-                break
+def info():
+    clear(0)
+    print("# == hitted\nx == not any ship\no == not touched place")
+    print("Columns given in numbers.\nRows given in letters.\n")
+    print("Enter '0' to get back to menu")
+    if int(input()) == 0:
+        menu()
 
-    def is_valid_placement(self, x, y, size, direction):
-        for i in range(-1, size + 1):
-            for j in range(-1, 2):
-                new_x, new_y = x + i * (direction == 'horizontal'), y + i * (direction == 'vertical')
-                if 0 <= new_x < self.board_size and 0 <= new_y < self.board_size and self.board[new_y][new_x] != ' ':
-                    return False
-        return True
+def check(row, column, list):
+    if list[row][column] == 1:
+        return 1
+    else:
+        return 0
+    
+def statistics():
+    clear(0)
+    for i in range(len(stat)):
+        print(stat[i][0], "     ", print(stat[i][1]))
+    print("\nEnter '0' to get back to menu")
+    if int(input()) == 0:
+        menu()
 
-    def player_turn(self):
-        while True:
-            try:
-                shot = input("Enter your shot (e.g., A3): ").upper()
-                if len(shot) != 2 or not ('A' <= shot[0] <= 'G') or not ('1' <= shot[1] <= '7'):
-                    raise ValueError("Invalid input. Please enter a valid shot (e.g., A3).")
-                x = ord(shot[0]) - ord('A')
-                y = int(shot[1]) - 1
-                if (x, y) in self.player_shots:
-                    raise ValueError("You already shot there. Try again.")
-                break
-            except ValueError as e:
-                print(e)
-        return x, y
+def change_for_hit(row, column, list):
+    list[row][column] = "#"
+    return list
 
-    def play_game(self):
-        self.place_ships()
-        self.print_board()
+def change_for_hit_for_game(row, column, list):
+    list[row][column] = 0
+    return list
 
-        while self.remaining_ships > 0:
-            x, y = self.player_turn()
+def change_for_not_hit(x, y, list):
+    list[x][y] = "x"
+    return list
 
-            if self.board[y][x] == ' ':
-                print("Miss!")
-                self.board[y][x] = 'M'
-            else:
-                ship_size = int(self.board[y][x])
-                self.board[y][x] = 'H'
-                if self.is_ship_sunk(ship_size):
-                    print(f"Hit and sunk a {ship_size}-sized ship!")
-                    self.remaining_ships -= 1
-                else:
-                    print("Hit!")
+def sunk(row, column, list): 
+    #for inside
+    if (row > 0 and row < 6) and (column > 0 and column < 6):
+        list[row+1][column+1] = "x"
+        list[row-1][column-1] = "x"
+        list[row+1][column-1] = "x"
+        list[row-1][column+1] = "x"
+        list[row][column+1] = "x"
+        list[row][column-1] = "x"
+        list[row+1][column] = "x"
+        list[row-1][column] = "x"
+    
+    #for corners
+    if row == 0 and column == 0:
+        list[row+1][column+1] = "x"
+        list[row][column+1] = "x"
+        list[row+1][column] = "x"
+    if row == 0 and column == 6:
+        list[row+1][column-1] = "x"
+        list[row][column-1] = "x"
+        list[row+1][column] = "x"
+    if row == 6 and column == 0:
+        list[row-1][column+1] = "x"
+        list[row-1][column] = "x"
+        list[row][column+1] = "x"
+    if row == 6 and column == 6:
+        list[row-1][column-1] = "x"
+        list[row-1][column] = "x"
+        list[row][column-1] = "x"
+    
+    #for sides
+    if (row == 0 and (column > 0 and column < 6)):
+        list[row+1][column-1] = "x"
+        list[row+1][column+1] = "x"
+        list[row][column+1] = "x"
+        list[row][column-1] = "x"
+        list[row+1][column] = "x"
+    if (row == 6 and (column > 0 and column < 6)):
+        list[row-1][column-1] = "x"
+        list[row-1][column+1] = "x"
+        list[row][column+1] = "x"
+        list[row][column-1] = "x"
+        list[row-1][column] = "x"
+    if (column == 0 and (row > 0 and row < 6)):
+        list[row+1][column+1] = "x"
+        list[row-1][column+1] = "x"
+        list[row+1][column] = "x"
+        list[row-1][column] = "x"
+        list[row][column+1] = "x"
+    if (column == 6 and (row > 0 and row < 6)):
+        list[row+1][column-1] = "x"
+        list[row-1][column-1] = "x"
+        list[row-1][column] = "x"
+        list[row+1][column] = "x"
+        list[row][column-1] = "x"
+    return list
 
-            self.player_shots.add((x, y))
-            self.print_board()
+def not_sunk(row, column, list):
+    #for inside
+    if (row > 0 and row < 6) and (column > 0 and column < 6):
+        list[row+1][column+1] = "x"
+        list[row-1][column-1] = "x"
+        list[row+1][column-1] = "x"
+        list[row-1][column+1] = "x"   
+    
+    #for corners
+    if row == 0 and column == 0:
+        list[row+1][column+1] = "x"
+    if row == 0 and column == 6:
+        list[row+1][column-1] = "x"
+    if row == 6 and column == 0:
+        list[row-1][column+1] = "x"
+    if row == 6 and column == 6:
+        list[row-1][column-1] = "x"
+    
+    #for sides
+    if (row == 0 and (column > 0 and column < 6)):
+        list[row+1][column-1] = "x"
+        list[row+1][column+1] = "x"
+    if (row == 6 and (column > 0 and column < 6)):
+        list[row-1][column-1] = "x"
+        list[row-1][column+1] = "x"
+    if (column == 0 and (row > 0 and row < 6)):
+        list[row+1][column+1] = "x"
+        list[row-1][column+1] = "x"
+    if (column == 6 and (row > 0 and row < 6)):
+        list[row+1][column-1] = "x"
+        list[row-1][column-1] = "x"
+    return list
 
-        print(f"Congratulations, {self.player_name}! You sank all the ships in {len(self.player_shots)} shots.")
 
-if __name__ == "__main__":
-    game = BattleshipGame()
-    game.play_game()
+def checknear(row, column, list):
